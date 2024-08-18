@@ -12,7 +12,7 @@ class OrderForm(forms.ModelForm):
         widgets = {
             'request_date': forms.DateInput(attrs={'type': 'date', 'min': timezone.now().date().isoformat()}),
             'supply_date': forms.DateInput(attrs={'type': 'date', 'min': timezone.now().date().isoformat()}),
-            }
+        }
 
     
 class OrderReviewForm(forms.ModelForm):

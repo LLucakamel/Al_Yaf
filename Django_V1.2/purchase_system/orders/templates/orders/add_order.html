@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% block title %}Add New Order{% endblock %}
+
+{% block content %}
+<!-- Ensure jQuery and jQuery UI are included -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<h2>{{ form.instance.id|yesno:"Edit,Add New" }} Order </h2>
+<div class="container">
+<form method="post">
+    <div class="form-row">
+
+        <div class="form-col">
+            <label>Requester:</label>
+            <input type="text" value="{{ request.user.username }}" disabled>
+        </div>
+    <div class="form-col">{{ form.order_name.label_tag }}{{ form.order_name }}</div>
+    <div class="form-col">{{ form.request_date.label_tag }}{{ form.request_date }}</div>
+    <div class="form-col">{{ form.supply_date.label_tag }}{{ form.supply_date }}</div>
+</div>
+
+<div class="form-row">
+    <div class="form-col">{{ form.project_name.label_tag }}{{ form.project_name }}</div>
+    <div class="form-col">{{ form.project_code.label_tag }}{{ form.project_code }}</div>
+    <div class="form-col">{{ form.project_consultant.label_tag }}{{ form.project_consultant }}</div>
+    <div class="form-col">{{ form.project_location.label_tag }}{{ form.project_location }}</div>
+</div>
+
+<div class="form-row">
+    <!-- Fourth Row: Project Phase -->
+    <div class="form-col">
+        {{ form.project_phase.label_tag }}
+        <select name="{{ form.project_phase.name }}" id="{{ form.project_phase.id_for_label }}">
+            <option value="">---</option>
+            {% for num in range_1_to_10 %}
+                <option value="{{ num }}" {% if form.project_phase.value|stringformat:"s" == num|stringformat:"s" %}selected{% endif %}>{{ num }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="product-container">
+    <form method="post">
+        <div id="product-rows-container" class="flex-container">
+            <div id="product-rows">
+                <!-- Default Product row (no checkbox) -->
+                <div class="form-row product-row">
+                    <div class="form-col">
+                        {{ form.product_name.label_tag }}
+                        <input type="text" id="id_product_name" name="product_name" class="dynamic-product-name autocomplete">
+                    </div>
+                    <div class="form-col">
+                        {{ form.product_code.label_tag }}
+                        <input type="text" id="id_product_code" name="product_code" class="dynamic-product-code">
+                    </div>
+                    <div class="form-col">
+                        <div class="input-container">
+                            {{ form.quantity.label_tag }}
+                            <input type="number" id="quantity" name="quantity">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <label>Unit:</label>
+                            <select id="unit" name="unit">
+                                <option value="kg">kg</option>
+                                <option value="km">km</option>
+                                <option value="L">L</option>
+                            </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="id_remarks">Remarks:</label>
+                        <textarea id="id_remarks" name="remarks" class="product-remarks" style="resize: none;"></textarea>
+                    </div>
+                </div>
+                <!-- Container for dynamically added product rows -->
+            </div>
+            <div class="button-row">
+                <button type="button" class="btn btn-orange add-row">Add Product</button>
+                <button type="button" class="btn btn-red remove-row" onclick="removeLastProductRow()">Remove Last</button>
+            </div>
+        </div>
+        <div style="margin:20px 0;">
+        <button type="submit" class="btn btn-green">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(function() {
+        function setupProjectAutocomplete() {
+            $("#id_project_name").autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: "{% url 'project_search' %}",  // Ensure this URL is correctly configured in urls.py
+                        dataType: "json",
+                        data: {
+                            term: request.term
+                        },
+                        success: function(data) {
+                            response($.map(data, function(item) {
+                                return {
+                                    label: item.name + " (" + item.code + ") - " + 
+                                           (item.consultant ? item.consultant : 'No consultant') + ", " + 
+                                           (item.location ? item.location : 'No location'),
+                                    value: item.name,
+                                    id: item.id,
+                                    code: item.code,
+                                    consultant: item.consultant,
+                                    location: item.location
+                                };
+                            }));
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error fetching data:", error);
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function(event, ui) {
+                    $('#id_project_name').val(ui.item.value);
+                    $('#id_project_code').val(ui.item.code);
+                    $('#id_project_consultant').val(ui.item.consultant || 'No consultant');
+                    $('#id_project_location').val(ui.item.location || 'No location');
+                    return false;
+                }
+            });
+        }
+
+        setupProjectAutocomplete();
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const productRowsContainer = document.getElementById('product-rows');
+        const addRowButton = document.querySelector('.add-row');
+        const removeRowButton = document.querySelector('.remove-row');
+
+        addRowButton.addEventListener('click', function() {
+            const newRow = document.createElement('div');
+            newRow.className = 'form-row product-row';
+            newRow.innerHTML = `
+                <div class="form-col">
+                    {{ form.product_name.label_tag }}
+                    <input type="text" name="product_name" class="dynamic-product-name autocomplete">
+                </div>
+                <div class="form-col">
+                    {{ form.product_code.label_tag }}
+                    <input type="text" name="product_code" class="dynamic-product-code autocomplete">
+                </div>
+                <div class="form-col">
+                    <div class="input-container">
+                        {{ form.quantity.label_tag }}
+                        <input type="number" name="quantity">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <label>Unit:</label>
+                    <select name="unit">
+                        <option value="kg">kg</option>
+                        <option value="km">km</option>
+                        <option value="L">L</option>
+                    </select>
+                </div>
+                <div class="form-col">
+                    <label for="id_remarks">Remarks:</label>
+                    <textarea name="remarks" class="product-remarks" style="resize: none;"></textarea>
+                </div>
+            `;
+            productRowsContainer.appendChild(newRow);
+        });
+
+        removeRowButton.addEventListener('click', function() {
+            var productRows = document.getElementById('product-rows');
+            if (productRows.children.length > 0) {
+                productRows.removeChild(productRows.lastChild);
+            }
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        function initializeAutocomplete() {
+            $(".autocomplete").autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: "{% url 'product_search' %}",
+                        dataType: "json",
+                        data: {
+                            term: request.term
+                        },
+                        success: function(data) {
+                            response($.map(data, function(item) {
+                                return {
+                                    label: item.name + " (" + item.code + ")",
+                                    value: item.name,
+                                    code: item.code
+                                };
+                            }));
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function(event, ui) {
+                    // This assumes the input for product code is next to the product name input
+                    $(this).val(ui.item.value);
+                    $(this).next('input').val(ui.item.code);
+                    return false;
+                }
+            });
+        }
+
+        // Initialize autocomplete on existing inputs
+        initializeAutocomplete();
+
+        // Function to add new input fields
+        document.addEventListener('DOMContentLoaded', function() {
+            const productRowsContainer = document.getElementById('product-rows');
+            const addRowButton = document.querySelector('.add-row');
+
+            addRowButton.addEventListener('click', function() {
+                const newRow = document.createElement('div');
+                newRow.className = 'form-row product-row';
+                newRow.innerHTML = `
+                    <div class="form-col">
+                        <label>Product Name:</label>
+                        <input type="text" name="product_name" class="dynamic-product-name autocomplete">
+                    </div>
+                    <div class="form-col">
+                        <label>Product Code:</label>
+                        <input type="text" name="product_code" class="dynamic-product-code">
+                    </div>
+                    <div class="form-col">
+                        <div class="input-container">
+                            <label>Quantity:</label>
+                            <input type="number" name="quantity">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <label>Unit:</label>
+                        <select name="unit">
+                            <option value="kg">kg</option>
+                            <option value="km">km</option>
+                            <option value="L">L</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="id_remarks">Remarks:</label>
+                        <textarea name="remarks" class="product-remarks" style="resize: none;"></textarea>
+                    </div>
+                `;
+                productRowsContainer.appendChild(newRow);
+                initializeAutocomplete();  // Re-initialize autocomplete on new inputs
+            });
+        });
+    });
+</script>
+
+{% endblock %}
+
+<style>
+    .flex-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .button-row {
+        margin-top: 10px;
+    }
+
+    /* General styling for the form */
+    .form-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px; /* Adds space between rows */
+        gap: 10px; /* Adds space between each form column */
+    }
+
+    .form-col {
+        display: flex;
+        align-items: center;
+        flex-grow: 1; /* Allows each column to grow and fill the space */
+    }
+
+    .product-name-label {
+        display: flex;
+        align-items: center; /* Aligns the label text inline */
+        margin-right: 10px; /* Space between label and input field */
+        background-color: #f2c1d1; /* Pink background */
+    }
+
+    .dynamic-product-name {
+        flex-grow: 1; /* Allows the input field to take up remaining space */
+    }
+
+    /* Label styling */
+    label {
+        display: block;
+        margin-bottom: 5px; /* Space between label and input */
+        font-weight: bold;
+    }
+
+    /* Input field styling */
+    input[type="text"] {
+        width: 200px; /* Fixed width for all text inputs */
+        height: 30px; /* Fixed height for better click area */
+        padding: 5px;
+        border: 1px solid #ccc; /* Subtle border color */
+        border-radius: 5px; /* Rounded corners */
+    }
+
+    /* Button styling */
+    button {
+        padding: 10px 20px;
+        background-color: #007BFF; /* Bootstrap primary color */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3; /* Darker shade on hover */
+    }
+
+    .input-container {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    input[type="number"] {
+        border: none;
+        padding: 10px;
+        width: 70%;
+        outline: none;
+    }
+
+    select {
+        border: none;
+        padding: 10px;
+        width: 30%;
+        outline: none;
+        cursor: pointer;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+</style>

@@ -22,23 +22,24 @@
 
     <!-- Search Form -->
     <div class="search-bar">
-        <form action="javascript:void(0);" method="GET" style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
-            <div style="flex: 1; padding-right: 10px;">
+        <form action="javascript:void(0);" method="GET" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1; padding: 0 10px;">
                 <label for="project_name">Project Name:</label>
                 <input type="text" id="project_name" name="project_name" placeholder="Search by Project Name" style="width: 100%; padding: 12px;" required onkeyup="searchProjects()">
             </div>
-            <div style="flex: 1; padding-right: 10px;">
+            <div style="flex: 1; padding: 0 10px;">
                 <label for="project_code">Project Code:</label>
                 <input type="text" id="project_code" name="project_code" placeholder="Search by Project Code" style="width: 100%; padding: 12px;" required onkeyup="searchProjects()">
             </div>
-            <div style="flex: 1; padding-right: 10px;">
+            <div style="flex: 1; padding: 0 10px;">
                 <label for="consultant">Consultant:</label>
                 <input type="text" id="consultant" name="consultant" placeholder="Search by Consultant" style="width: 100%; padding: 12px;" required onkeyup="searchProjects()">
             </div>
-            <div style="flex: 1; padding-right: 10px;">
+            <div style="flex: 1; padding: 0 10px;">
                 <label for="location">Location:</label>
                 <input type="text" id="location" name="location" placeholder="Search by Location" style="width: 100%; padding: 12px;" required onkeyup="searchProjects()">
             </div>
+            <button type="submit" class="btn btn-orange" style="position: relative; top: 10.5px;">Search</button>
         </form>
     </div>
     <br>

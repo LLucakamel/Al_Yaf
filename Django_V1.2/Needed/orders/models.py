@@ -21,7 +21,7 @@ class Order(models.Model):
     project_consultant = models.CharField(max_length=255)
     project_location = models.CharField(max_length=255)
     request_date = models.DateField(default=timezone.now)  # Set default to the current date
-    supply_date = models.DateField()   # This will be handled in the form to restrict past dates
+    supply_date = models.DateField()  # This will be handled in the form to restrict past dates
     products = models.ManyToManyField(Product, related_name='product_orders')
     requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 

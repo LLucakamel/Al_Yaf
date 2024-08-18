@@ -22,7 +22,6 @@ from accounts.views import profile_view
 from .views import home  # Import the home view
 from django.conf import settings
 from django.conf.urls.static import static
-from orders.views import delete_order  # Import delete_order from orders.views
 
 urlpatterns = [
     path('', home, name='home'),  # Use the home view for the root URL
@@ -35,5 +34,5 @@ urlpatterns = [
     path('users/', include('user_management.urls', namespace='user_management')),  # Assuming there's a user_management.urls module
     path('projects/', include('Projects.urls')), 
     path('products/', include('products.urls')),
-    path('orders/', include('orders.urls')),# Make sure this is correct
+    path('orders/', include('orders.urls')),  # Ensure 'orders.urls' is correctly spelled
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

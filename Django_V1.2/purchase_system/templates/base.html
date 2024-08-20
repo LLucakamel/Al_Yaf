@@ -64,7 +64,7 @@
     <nav id="sidebar">
       <ul class="nav-list">
         <li class="nav-item">
-          <a href="/"><svg class="icon"><use xlink:href="#dashboard-icon"></use></svg> Dashboard</a>        </li>
+          <a href="/"><svg class="icon"><use xlink:href="#dashboard-icon"></use></svg> Dashboard</a></li>
 
 
         <li class="nav-item has-dropdown">
@@ -75,8 +75,8 @@
             <li><a href="Purchase-Commands.html">Purchase Commands</a></li>
             <li><a href="Purchase-Invoices.html">Purchase Invoices</a></li>
             <li><a href="Purchase-Returns.html">Purchase Returns</a></li>
-            {% comment %} <li><a href="{% url 'order_list' %}">orders</a></li> {% endcomment %}
-            <li><a href="{% url 'project-list' %}">Projects</a></li>
+            <li><a href="{% url 'order_list' %}">orders</a></li>
+            <li><a href="{% url 'Projects:project-list' %}">Projects</a></li>
             <li><a href="Supplier-Payments.html">Supplier Payments</a></li>
             <li><a href="Purchase-Invoices-Settings.html">Purchase Invoices Settings</a></li>
             <li><a href="Supplier-Settings.html">Supplier Settings</a></li>

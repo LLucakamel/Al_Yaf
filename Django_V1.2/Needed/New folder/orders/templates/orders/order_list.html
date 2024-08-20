@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Orders List{% endblock %}
+
+{% block content %}
+<h2>Orders List</h2>
+<div class="container">
+
+    <div style="margin:10px 0;">
+        <a href="{% url 'add_order' %}" class="btn btn-green">Add New Order</a>
+    </div>
+
+    <form method="get" class="search-form" style="margin:30px 0;">
+        <div class="form-row">
+            <div class="form-col">
+                <label for="employee_name">Employee Name:</label>
+                <input type="text" id="employee_name" name="employee_name" placeholder="Search by employee name...">
+            </div>
+            <div class="form-col">
+                <label for="order_code">Order Code:</label>
+                <input type="text" id="order_code" name="order_code" placeholder="Search by order code...">
+            </div>
+            <div class="form-col">
+                <label for="product_name">Product Name:</label>
+                <input type="text" id="product_name" name="product_name" placeholder="Search by product name...">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <label for="date_from">Date From:</label>
+                <input type="date" id="date_from" name="date_from">
+            </div>
+            <div class="form-col">
+                <label for="date_to">Date To:</label>
+                <input type="date" id="date_to" name="date_to">
+            </div>
+            <div class="form-col">
+                <label for="supplier_name">Supplier Name:</label>
+                <input type="text" id="supplier_name" name="supplier_name" placeholder="Search by supplier name...">
+            </div>
+        </div>
+        <button type="submit" class=" btn btn-orange" style="position:relative; left:5px">Search</button>
+    </form>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <thead>
+            <tr>
+                <th>SR.NO.</th>
+                <th>Requester</th>
+                <th>Order Name</th>
+                <th>Project Name</th>
+                <th>Project Code</th>
+                <th>Request Date</th>
+                <th>Supply Date</th>
+                <th>Status</th> <!-- Added status column -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr style="border-bottom: 1px solid #ccc;">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ order.requester.username }}</td>
+                <td>{{ order.order_name }}</td>
+                <td>{{ order.project_name }}</td>
+                <td>{{ order.project_code }}</td>
+                <td>{{ order.request_date }}</td>
+                <td>{{ order.supply_date }}</td>
+                <td>{{ order.status }}</td> <!-- Display order status -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

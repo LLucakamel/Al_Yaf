@@ -9,3 +9,11 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+
+class ProjectPhase(models.Model):
+    code = models.CharField(max_length=100)
+    phase_name = models.CharField(max_length=100)
+
+
+    def __str__(self):
+        return self.phase_name

@@ -10,39 +10,50 @@
         <a href="{% url 'add_order' %}" class="btn btn-green">Add New Order</a>
     </div>
 
-    <form method="get" class="search-form" style="margin:30px 0;">
+    <form method="get" class="search-form" style="margin:30px 0;" id="searchForm">
         <div class="form-row">
             <div class="form-col">
-                <label for="employee_name">Employee Name:</label>
-                <input type="text" id="employee_name" name="employee_name" placeholder="Search by employee name...">
+                <label for="requester">Requester:</label>
+                <input type="text" id="requester" name="requester" placeholder="Search by Requester name...">
             </div>
             <div class="form-col">
-                <label for="order_code">Order Code:</label>
-                <input type="text" id="order_code" name="order_code" placeholder="Search by order code...">
+                <label for="order_Name">Order Name:</label>
+                <input type="text" id="order_name" name="order_name" placeholder="Search by Order name...">
             </div>
             <div class="form-col">
-                <label for="product_name">Product Name:</label>
-                <input type="text" id="product_name" name="product_name" placeholder="Search by product name...">
+                <label for="product_name">Project Name:</label>
+                <input type="text" id="product_name" name="product_name" placeholder="Search by Project name...">
             </div>
         </div>
         <div class="form-row">
             <div class="form-col">
-                <label for="date_from">Date From:</label>
-                <input type="date" id="date_from" name="date_from">
+                <label for="request_date">Request Date:</label>
+                <input type="date" id="request_date" name="request_date">
             </div>
             <div class="form-col">
-                <label for="date_to">Date To:</label>
-                <input type="date" id="date_to" name="date_to">
+                <label for="supply_date">Supply Date:</label>
+                <input type="date" id="supply_date" name="supply_date">
             </div>
             <div class="form-col">
-                <label for="supplier_name">Supplier Name:</label>
-                <input type="text" id="supplier_name" name="supplier_name" placeholder="Search by supplier name...">
+                <label for="project_code">Project Code:</label>
+                <input type="text" id="project_code" name="project_code" placeholder="Search by Project code...">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <label for="status">Status:</label>
+                <select id="status" name="status">
+                    <option value="">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="disapproved">Disapproved</option>
+                </select>
             </div>
         </div>
         <button type="submit" class=" btn btn-orange" style="position:relative; left:5px">Search</button>
     </form>
 
-    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+    <table id="ordersTable" style="width: 100%; border-collapse: collapse; margin: 20px 0;">
         <thead>
             <tr>
                 <th>SR.NO.</th>
@@ -52,7 +63,7 @@
                 <th>Project Code</th>
                 <th>Request Date</th>
                 <th>Supply Date</th>
-                <th>Status</th> <!-- Added status column -->
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -65,11 +76,68 @@
                 <td>{{ order.project_code }}</td>
                 <td>{{ order.request_date }}</td>
                 <td>{{ order.supply_date }}</td>
-                <td>{{ order.status }}</td> <!-- Display order status -->
+                <td>{{ order.status }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const requesterInput = document.getElementById('requester');
+        const orderNameInput = document.getElementById('order_name');
+        const projectNameInput = document.getElementById('product_name');
+        const projectCodeInput = document.getElementById('project_code');
+        const requestDateInput = document.getElementById('request_date');
+        const supplyDateInput = document.getElementById('supply_date');
+        const statusSelect = document.getElementById('status');
+        const ordersTable = document.getElementById('ordersTable');
+    
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+        }
+    
+        function filterOrders() {
+            const requester = requesterInput.value.toLowerCase();
+            const orderName = orderNameInput.value.toLowerCase();
+            const projectName = projectNameInput.value.toLowerCase();
+            const projectCode = projectCodeInput.value.toLowerCase();
+            const requestDate = requestDateInput.value ? formatDate(requestDateInput.value) : '';
+            const supplyDate = supplyDateInput.value ? formatDate(supplyDateInput.value) : '';
+            const status = statusSelect.value.toLowerCase();
+    
+            console.log(`Filtering for: ${requestDate} and ${supplyDate}`); // Debugging output
+    
+            document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
+                const requesterMatch = row.cells[1].textContent.toLowerCase().includes(requester);
+                const orderNameMatch = row.cells[2].textContent.toLowerCase().includes(orderName);
+                const projectNameMatch = row.cells[3].textContent.toLowerCase().includes(projectName);
+                const projectCodeMatch = row.cells[4].textContent.toLowerCase().includes(projectCode);
+                const requestDateMatch = requestDate ? formatDate(row.cells[5].textContent) === requestDate : true;
+                const supplyDateMatch = supplyDate ? formatDate(row.cells[6].textContent) === supplyDate : true;
+                const statusMatch = status ? row.cells[7].textContent.toLowerCase().includes(status) : true;
+    
+                console.log(`Row Date: ${formatDate(row.cells[5].textContent)} vs Filter Date: ${requestDate}`); // Debugging output
+    
+                if (requesterMatch && orderNameMatch && projectNameMatch && projectCodeMatch && requestDateMatch && supplyDateMatch && statusMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    
+        requesterInput.addEventListener('input', filterOrders);
+        orderNameInput.addEventListener('input', filterOrders);
+        projectNameInput.addEventListener('input', filterOrders);
+        projectCodeInput.addEventListener('input', filterOrders);
+        requestDateInput.addEventListener('change', filterOrders);
+        supplyDateInput.addEventListener('change', filterOrders);
+        statusSelect.addEventListener('change', filterOrders);
+    });
+    </script>
+
 {% endblock %}

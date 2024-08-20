@@ -9,7 +9,8 @@ import datetime
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
-from Projects.models import Project
+from Projects.models import Project, ProjectPhase  # Import ProjectPhase along with Project
+from django.urls import reverse
 
 class OrderForm(forms.ModelForm):
     class Meta:
@@ -30,21 +31,20 @@ class OrderForm(forms.ModelForm):
         if not self.instance.pk:  # Checking if the instance is not saved (i.e., it's new)
             self.fields['request_date'].initial = timezone.now().date()
 
-
 def add_order(request):
-    # Assuming you have a form for Order
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('order_success')  # Redirect to a new URL after saving
+            order = form.save()
+            # هنا يتم إنشاء الطلب والمنتجات بناءً على البيانات المرسلة
+            products_data = request.POST.getlist('product_name')
+            for name in products_data:
+                Product.objects.create(order=order, name=name)
+            return redirect('order_list')
     else:
         form = OrderForm()
-        context = {
-            'form': form,
-            'range_1_to_10': range(1, 11)  # This creates a range from 1 to 10
-        }
-    return render(request, 'orders/add_order.html', context)
+
+    return render(request, 'orders/add_order.html', {'form': form})
 
 def order_list(request):
     orders = Order.objects.all()  # Now Order is defined
@@ -55,6 +55,7 @@ def project_search_view(request):
     data = {}  # تعريف المتغ data كقاموس فارغ
     # يمكنك إضافة بيانات إلى القاموس هنا بناءً على منطق البحث
     return JsonResponse(data)
+
 def product_search(request):
     term = request.GET.get('term', '')
     field = request.GET.get('field', 'name')
@@ -79,3 +80,40 @@ def project_search(request):
         for project in projects
     ]
     return JsonResponse(project_list, safe=False)
+
+from django.http import JsonResponse
+
+def project_phase_list_api(request):
+    phases = ProjectPhase.objects.all().values('id', 'phase_name')
+    return JsonResponse(list(phases), safe=False)
+
+def approve_order(request):
+    # هنا يمكنك إضافة منطق الموافقة على الطلب
+    # على سبيل المثال، تغيير حالة الطلب إلى 'موافق عليه'
+    return redirect('order_list')  # إعادة التوجيه إلى قائمة الطلبات بعد الموافقة
+
+def edit_order(request, order_id):
+    order = get_object_or_404(Order, pk=order_id)
+    if request.method == 'POST':
+        form = OrderForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('order_list')
+    else:
+        form = OrderForm(instance=order)
+    return render(request, 'orders/edit_order.html', {'form': form})
+
+def reject_order(request, order_id):
+    order = Order.objects.get(pk=order_id)
+    order.status = 'rejected'  # تحديث حالة الطلب إلى 'مرفوض'
+    order.save()
+    return redirect('order_list')  # إعادة التوجيه إلى قائمة الطلبات
+
+def update_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == 'POST':
+        # Process your form data here
+        # For example, update fields in the order object
+        order.save()
+        return redirect('some_success_url')  # Redirect to a new URL after processing
+    return render(request, 'orders/update_order.html', {'order': order})

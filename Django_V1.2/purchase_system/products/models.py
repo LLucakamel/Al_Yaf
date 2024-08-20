@@ -1,12 +1,13 @@
 from django.db import models
+from orders.models import Order  # Import the Order model
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
-    supplier = models.CharField(max_length=255)
     code = models.CharField(max_length=100, unique=True)
     quantity = models.IntegerField()
     image = models.ImageField(upload_to='products/images/')
     stock = models.IntegerField(default=0)  # Added stock field
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if self.pk:  # If it's an existing instance

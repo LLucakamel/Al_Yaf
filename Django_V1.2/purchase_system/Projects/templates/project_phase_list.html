@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Project Phases{% endblock %}
+
+{% block content %}
+<h2>Project Phases</h2>
+<div class="container">
+    <div style="margin:10px 0;">
+<a href="{% url 'Projects:add_phases' %}" class="btn btn-green">Add Phases</a>
+    </div>
+<table class="table" style="margin: 30px 0;">
+    <thead>
+        <tr>
+            <th>SR. NO.</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for phase in phases %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ phase.code }}</td>
+            <td>{{ phase.phase_name }}</td>
+            <td>
+                <a href="{% url 'Projects:edit_phase' phase.id %}" class="btn btn-white">Edit</a>
+                <a href="{% url 'Projects:remove_phase' phase.id %}" class="btn btn-red">Remove</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No phases available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

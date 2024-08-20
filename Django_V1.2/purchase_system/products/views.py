@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class ProductForm(ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'code', 'quantity', 'supplier', 'image']
+        fields = ['name', 'code', 'quantity', 'image']
 
 def product_list(request):
     products = Product.objects.all()  # استعلام لجلب جميع المنتجات
@@ -54,7 +54,7 @@ def product_data(request):
     return JsonResponse(list(products), safe=False)
 
 def product_export(request):
-    products = Product.objects.all().values('code', 'name', 'stock', 'supplier')
+    products = Product.objects.all().values('code', 'name', 'stock')
     df = pd.DataFrame(list(products))
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="products.xlsx"'
@@ -78,7 +78,6 @@ def product_import(request):
                     defaults={
                         'name': row['name'],
                         'stock': row['stock'],
-                        'supplier': row['supplier'],
                         'quantity': row['stock']  # Assuming you want to set stock equal to quantity on import
                     }
                 )

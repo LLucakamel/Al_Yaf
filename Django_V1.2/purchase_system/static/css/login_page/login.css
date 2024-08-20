@@ -74,7 +74,6 @@ body {
     align-items: center;
     margin-bottom: 15px;
     border: none;
-    border-radius: 4px;
     background: #fff;
     padding: 10px;
 }
@@ -88,10 +87,7 @@ body {
     flex: 1;
     padding: 10px;
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #222222;
-    background: #fff;
+
     transition: border 0.3s ease-in-out; /* Smooth transition for border changes */
 }
 

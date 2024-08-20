@@ -13,9 +13,3 @@ class OrderForm(forms.ModelForm):
             'request_date': forms.DateInput(attrs={'type': 'date', 'min': timezone.now().date().isoformat()}),
             'supply_date': forms.DateInput(attrs={'type': 'date', 'min': timezone.now().date().isoformat()}),
             }
-
-    
-class OrderReviewForm(forms.ModelForm):
-    class Meta:
-        model = Order
-        fields = ['status']

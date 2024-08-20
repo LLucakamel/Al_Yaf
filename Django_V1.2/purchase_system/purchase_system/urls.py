@@ -32,7 +32,7 @@ urlpatterns = [
     path('profile/', profile_view, name='profile'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'), 
     path('users/', include('user_management.urls', namespace='user_management')),  # Assuming there's a user_management.urls module
-    path('projects/', include('Projects.urls')), 
+    path('projects/', include('Projects.urls', namespace='Projects')),  # Changed this line
     path('products/', include('products.urls')),
     path('orders/', include('orders.urls')),  # Ensure 'orders.urls' is correctly spelled
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

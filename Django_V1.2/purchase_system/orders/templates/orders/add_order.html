@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <h2>{{ form.instance.id|yesno:"Edit,Add New" }} Order </h2>
 <div class="container">
-<form method="post">
+<form method="post" action="#">
+    {% csrf_token %}
     <div class="form-row">
-
         <div class="form-col">
             <label>Requester:</label>
             <input type="text" value="{{ request.user.username }}" disabled>
@@ -30,11 +30,10 @@
 <div class="form-row">
     <!-- Fourth Row: Project Phase -->
     <div class="form-col">
-        {{ form.project_phase.label_tag }}
-        <select name="{{ form.project_phase.name }}" id="{{ form.project_phase.id_for_label }}">
-            <option value="">---</option>
-            {% for num in range_1_to_10 %}
-                <option value="{{ num }}" {% if form.project_phase.value|stringformat:"s" == num|stringformat:"s" %}selected{% endif %}>{{ num }}</option>
+        <label for="id_project_phase">{{ form.project_phase.label_tag }}</label>
+        <select id="id_project_phase" name="project_phase">
+            {% for phase in phases %}
+            <option value="{{ phase.id }}">{{ phase.phase_name }}</option>
             {% endfor %}
         </select>
     </div>
@@ -52,7 +51,7 @@
                     </div>
                     <div class="form-col">
                         {{ form.product_code.label_tag }}
-                        <input type="text" id="id_product_code" name="product_code" class="dynamic-product-code">
+                        <input type="text" id="id_product_code" name="product_code" class="product-code-input">
                     </div>
                     <div class="form-col">
                         <div class="input-container">
@@ -63,9 +62,11 @@
                     <div class="form-col">
                         <label>Unit:</label>
                             <select id="unit" name="unit">
-                                <option value="kg">kg</option>
-                                <option value="km">km</option>
-                                <option value="L">L</option>
+                                <option value="Bundle">Bundle</option>
+                                <option value="Trilla">Trilla</option>
+                                <option value="Ton">Ton</option>
+                                <option value="6-Wheel">6-Wheel</option>
+                                <option value="Pick-UP">Pick-UP</option>
                             </select>
                     </div>
                     <div class="form-col">
@@ -77,8 +78,18 @@
             </div>
             <div class="button-row">
                 <button type="button" class="btn btn-orange add-row">Add Product</button>
-                <button type="button" class="btn btn-red remove-row" onclick="removeLastProductRow()">Remove Last</button>
+                <button type="button" class="btn btn-red remove-row" onclick="removeLastProductRow()">Remove</button>
             </div>
+        </div>
+        <div class="form-col" style="margin:20px; border: 1px solid gray; padding: 10px;">
+            <h4>Remarks/Instructions: <span style="float: right;">:ملاحظات / تعليمات</span></h4>
+            <hr>
+            <p><strong>Clearly Define Required Materials:</strong> The requester should precisely specify the materials needed, along with technical specifications and required quantities for each item.</p>
+            <p style="direction: rtl; text-align: right;"><strong>تحديد المواد المطلوبة بوضوح:</strong> يجب على مقدم الطلب تحديد المواد المطلوبة بدقة، مع المواصفات الفنية والكميات المطلوبة لكل عنصر.</p>
+            <p><strong>Required Deadlines:</strong> The requester should set the final deadlines by which these materials are needed to ensure they are available in time for the project or work.</p>
+            <p style="direction: rtl; text-align: right;"><strong>المواعيد النهائية المطلوبة:</strong> يجب على مقدم الطلب تحديد امواعيد النهائية التي يجب أن تتوفر فيها هذه المواد لضمان توافرها في الوقت المناسب للمشروع أو العمل.</p>
+            <p><strong>Any Special Requirements:</strong> If there are any special requirements related to delivery, quality, or any other conditions, the requester should clearly specify them in the purchase request.</p>
+            <p style="direction: rtl; text-align: right;"><strong>أي متطلبات خاصة:</strong> إذا كانت هناك أي متطلبات خاصة تتعلق بالتسليم أو الجودة أو أي شرو أخرى، يجب على مقدم الطلب تحديدها بوضوح في طلب الشراء.</p>
         </div>
         <div style="margin:20px 0;">
         <button type="submit" class="btn btn-green">Submit</button>
@@ -132,7 +143,47 @@
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    $(function() {
+        // Function to setup autocomplete
+        function setupAutocomplete() {
+            $(".dynamic-product-name").each(function() {
+                $(this).autocomplete({
+                    source: function(request, response) {
+                        $.ajax({
+                            url: "{% url 'product_search' %}",  // Ensure this URL is correctly configured in urls.py
+                            dataType: "json",
+                            data: {
+                                term: request.term
+                            },
+                            success: function(data) {
+                                response($.map(data, function(item) {
+                                    return {
+                                        label: item.name + " (" + item.code + ")",
+                                        value: item.name,
+                                        code: item.code
+                                    };
+                                }));
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Error fetching data:", error);
+                            }
+                        });
+                    },
+                    minLength: 2,
+                    select: function(event, ui) {
+                        // Set the selected name
+                        $(this).val(ui.item.value);
+                        // Set the corresponding code in the adjacent input field
+                        $(this).closest('.form-row').find('.product-code-input').val(ui.item.code);
+                        return false; // Prevent the widget from updating the input with the label.
+                    }
+                });
+            });
+        }
+
+        // Call setupAutocomplete on page load
+        setupAutocomplete();
+
         const productRowsContainer = document.getElementById('product-rows');
         const addRowButton = document.querySelector('.add-row');
         const removeRowButton = document.querySelector('.remove-row');
@@ -142,124 +193,129 @@
             newRow.className = 'form-row product-row';
             newRow.innerHTML = `
                 <div class="form-col">
-                    {{ form.product_name.label_tag }}
-                    <input type="text" name="product_name" class="dynamic-product-name autocomplete">
+                    <label>Product name:</label>
+                    <input type="text" name="product_name" class="dynamic-product-name">
                 </div>
                 <div class="form-col">
-                    {{ form.product_code.label_tag }}
-                    <input type="text" name="product_code" class="dynamic-product-code autocomplete">
+                    <label>Product code:</label>
+                    <input type="text" name="product_code" class="product-code-input">
                 </div>
                 <div class="form-col">
-                    <div class="input-container">
-                        {{ form.quantity.label_tag }}
-                        <input type="number" name="quantity">
-                    </div>
+                    <label>Quantity:</label>
+                    <input type="number" name="quantity">
                 </div>
                 <div class="form-col">
                     <label>Unit:</label>
-                    <select name="unit">
-                        <option value="kg">kg</option>
-                        <option value="km">km</option>
-                        <option value="L">L</option>
-                    </select>
+                 <select id="unit" name="unit">
+                                <option value="Bundle">Bundle</option>
+                                <option value="Trilla">Trilla</option>
+                                <option value="Ton">Ton</option>
+                                <option value="6-Wheel">6-Wheel</option>
+                                <option value="Pick-UP">Pick-UP</option>
+                            </select>
                 </div>
                 <div class="form-col">
-                    <label for="id_remarks">Remarks:</label>
-                    <textarea name="remarks" class="product-remarks" style="resize: none;"></textarea>
+                    <label>Remarks:</label>
+                    <textarea name="remarks" style="resize: none;"></textarea>
                 </div>
             `;
             productRowsContainer.appendChild(newRow);
+            setupAutocomplete(); // Setup autocomplete for the new row
         });
 
         removeRowButton.addEventListener('click', function() {
-            var productRows = document.getElementById('product-rows');
-            if (productRows.children.length > 0) {
-                productRows.removeChild(productRows.lastChild);
+            if (productRowsContainer.children.length > 1) { // Ensure at least one row remains
+                productRowsContainer.removeChild(productRowsContainer.lastChild);
             }
         });
     });
 </script>
 
 <script>
-    $(document).ready(function() {
-        function initializeAutocomplete() {
-            $(".autocomplete").autocomplete({
+    $(function() {
+        function setupAutocomplete(elementId, otherElementId) {
+            $(elementId).autocomplete({
                 source: function(request, response) {
+                    console.log("Searching for:", request.term);
                     $.ajax({
                         url: "{% url 'product_search' %}",
                         dataType: "json",
                         data: {
-                            term: request.term
+                            term: request.term,
+                            field: elementId === "#id_product_name" ? "name" : "code"
                         },
                         success: function(data) {
-                            response($.map(data, function(item) {
-                                return {
-                                    label: item.name + " (" + item.code + ")",
-                                    value: item.name,
-                                    code: item.code
-                                };
-                            }));
+                            console.log("Received data:", data);
+                            response(data);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error:", error);
                         }
                     });
                 },
                 minLength: 2,
                 select: function(event, ui) {
-                    // This assumes the input for product code is next to the product name input
-                    $(this).val(ui.item.value);
-                    $(this).next('input').val(ui.item.code);
+                    $("#id_product_name").val(ui.item.name);
+                    $("#id_product_code").val(ui.item.code);
                     return false;
                 }
             });
         }
-
-        // Initialize autocomplete on existing inputs
-        initializeAutocomplete();
-
-        // Function to add new input fields
-        document.addEventListener('DOMContentLoaded', function() {
-            const productRowsContainer = document.getElementById('product-rows');
-            const addRowButton = document.querySelector('.add-row');
-
-            addRowButton.addEventListener('click', function() {
-                const newRow = document.createElement('div');
-                newRow.className = 'form-row product-row';
-                newRow.innerHTML = `
-                    <div class="form-col">
-                        <label>Product Name:</label>
-                        <input type="text" name="product_name" class="dynamic-product-name autocomplete">
-                    </div>
-                    <div class="form-col">
-                        <label>Product Code:</label>
-                        <input type="text" name="product_code" class="dynamic-product-code">
-                    </div>
-                    <div class="form-col">
-                        <div class="input-container">
-                            <label>Quantity:</label>
-                            <input type="number" name="quantity">
-                        </div>
-                    </div>
-                    <div class="form-col">
-                        <label>Unit:</label>
-                        <select name="unit">
-                            <option value="kg">kg</option>
-                            <option value="km">km</option>
-                            <option value="L">L</option>
-                        </select>
-                    </div>
-                    <div class="form-col">
-                        <label for="id_remarks">Remarks:</label>
-                        <textarea name="remarks" class="product-remarks" style="resize: none;"></textarea>
-                    </div>
-                `;
-                productRowsContainer.appendChild(newRow);
-                initializeAutocomplete();  // Re-initialize autocomplete on new inputs
-            });
-        });
+    
+        setupAutocomplete("#id_product_name", "#id_product_code");
+        setupAutocomplete("#id_product_code", "#id_product_name");
     });
 </script>
 
-{% endblock %}
+<script>
+    $(function() {
+        function fetchPhases() {
+            $.ajax({
+                url: "{% url 'api_phases' %}",
+                dataType: "json",
+                success: function(data) {
+                    var select = $('#id_project_phase');
+                    select.empty(); // Clear existing options
+                    data.forEach(function(phase) {
+                        select.append($('<option></option>').attr('value', phase.id).text(phase.phase_name));
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching phases:", error);
+                }
+            });
+        }
 
+        fetchPhases(); // Call this function on page load
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select');
+
+    function updateOptions() {
+        const selectedValues = Array.from(selects).map(select => select.value);
+
+        selects.forEach(select => {
+            const currentValue = select.value;
+            select.querySelectorAll('option').forEach(option => {
+                if (selectedValues.includes(option.value) && option.value !== currentValue) {
+                    option.disabled = true;
+                } else {
+                    option.disabled = false;
+                }
+            });
+        });
+    }
+
+    selects.forEach(select => select.addEventListener('change', updateOptions));
+
+    updateOptions();
+});
+</script>
+
+{% endblock %}
 <style>
     .flex-container {
         display: flex;

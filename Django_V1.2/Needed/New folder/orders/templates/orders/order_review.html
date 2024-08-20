@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Order Review</h1>
+<p>Order Name: {{ order.order_name }}</p>
+<p>Requester: {{ order.requester }}</p>
+<p>Project Name: {{ order.project_name }}</p>
+<p>Product Details:</p>
+<ul>
+    {% for product in order.product_set.all %}
+    <li>{{ product.name }} - {{ product.quantity }} {{ product.unit }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

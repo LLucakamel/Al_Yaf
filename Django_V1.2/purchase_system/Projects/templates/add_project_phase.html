@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Add Project Phases{% endblock title %}
+
+{% block content %}
+<h2>Add Project Phase</h2>
+<div class="container">
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-green">Submit</button>
+</form>
+</div>
+{% endblock content %}

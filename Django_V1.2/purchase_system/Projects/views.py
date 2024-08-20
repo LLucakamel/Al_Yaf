@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404  # Added get_object_or_404 here
 from .models import Project
-from .forms import ProjectForm  # Import ProjectForm from forms.py within the same directory
+from .forms import ProjectForm, ProjectPhaseForm, EditPhaseForm  # Import EditPhaseForm
 from django.http import JsonResponse, HttpResponse  # Add HttpResponse to the existing import
 from openpyxl import Workbook, load_workbook  # Add load_workbook to the existing import
 from io import BytesIO  # Import BytesIO for generating Excel file
@@ -12,7 +12,7 @@ def project_create(request):
         location = request.POST.get('location')
         consultant = request.POST.get('consultant')
         Project.objects.create(name=name, code=code, location=location, consultant=consultant)
-        return redirect('some-view-name')
+        return redirect('Projects:project-list')
     return render(request, 'projects.html')
 
 def project_list(request):
@@ -24,7 +24,7 @@ def add_project(request):
         form = ProjectForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('project-list')  # Redirect to the project list after saving
+            return redirect('Projects:project-list')  # Redirect to the project list after saving
     else:
         form = ProjectForm()
     return render(request, 'add_project.html', {'form': form})
@@ -44,7 +44,7 @@ def edit_project(request, project_id):
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
-            return redirect('some-view-name')
+            return redirect('Projects:project-list')
     else:
         form = ProjectForm(instance=project)
     return render(request, 'edit_project.html', {'form': form})
@@ -65,7 +65,7 @@ def import_projects(request):
                 }
             )
 
-        return redirect('project-list')  # Redirect to the project list after importing
+        return redirect('Projects:project-list')  # Redirect to the project list after importing
 
     return render(request, 'import_projects.html')
 
@@ -92,6 +92,47 @@ def export_projects(request):
     return response
 
 def search_projects(request):
-    query = request.GET.get('q', '')
+    query = request.POST.get('q', '')
     projects = Project.objects.filter(name__icontains=query)  # Adjust the filter as needed
     return render(request, 'projects/project_list.html', {'projects': projects})
+
+# New code for adding project phases
+
+def add_project_phase(request):
+    if request.method == 'POST':
+        form = ProjectPhaseForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('Projects:project_phase_list')  # Redirect to the list of project phases
+    else:
+        form = ProjectPhaseForm()
+    return render(request, 'add_project_phase.html', {'form': form})
+
+from django.views.generic import ListView
+from .models import ProjectPhase
+
+class ProjectPhaseListView(ListView):
+    model = ProjectPhase
+    template_name = 'project_phase_list.html'
+    context_object_name = 'phases'
+
+def project_phase_list_api(request):
+    phases = ProjectPhase.objects.all().values('id', 'phase_name')
+    return JsonResponse(list(phases), safe=False)
+
+def edit_phase(request, id):
+    phase = get_object_or_404(ProjectPhase, id=id)
+    if request.method == 'POST':
+        form = EditPhaseForm(request.POST, instance=phase)
+        if form.is_valid():
+            form.save()
+            return redirect('Projects:project_phase_list')  # Redirect to the phase list
+    else:
+        form = EditPhaseForm(instance=phase)
+    return render(request, 'edit_phase.html', {'form': form})
+
+def remove_phase(request, phase_id):
+    # Logic to delete a project phase
+    phase = get_object_or_404(ProjectPhase, id=phase_id)
+    phase.delete()
+    return redirect('Projects:project_phase_list')
